@@ -60,8 +60,9 @@ import os
 
 from flask import Flask
 from flask_babelex import Babel
-from invenio_waitforme import InvenioWaitForMe
 from invenio_db import InvenioDB
+
+from invenio_waitforme import InvenioWaitForMe
 
 # Create Flask application
 app = Flask(__name__)

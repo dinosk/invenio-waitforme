@@ -40,8 +40,12 @@ tests_require = [
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',
     'pytest>=2.8.0',
-    'elasticsearch>=5.3',
+    'elasticsearch>=2.2',
     'waiting>=1.4.1',
+    'requests-mock>=1.3.0',
+    'testing.elasticsearch2',
+    'httpretty>=0.8.14',
+    'mockredispy>=2.9.0.11',
 ]
 
 extras_require = {
@@ -62,6 +66,7 @@ setup_requires = [
 
 install_requires = [
     'Flask-BabelEx>=0.9.2',
+    'psycopg2>=2.7.1',
 ]
 
 packages = find_packages()
@@ -92,7 +97,7 @@ setup(
             'invenio_waitforme = invenio_waitforme:InvenioWaitForMe',
         ],
         'invenio_base.apps': [
-            'invenio_waitforme = invenio_waitforme:invenioWaitForMe',
+            'invenio_waitforme = invenio_waitforme:InvenioWaitForMe',
         ],
         # TODO: Edit these entry points to fit your needs.
         # 'invenio_access.actions': [],

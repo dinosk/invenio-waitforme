@@ -26,34 +26,66 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import Flask
-
-from invenio_waitforme import inveniowaitforme
-
-
-def test_version():
-    """Test version import."""
-    from invenio_waitforme import __version__
-    assert __version__
-
-
-def test_init():
-    """Test extension initialization."""
-    app = Flask('testapp')
-    ext = inveniowaitforme(app)
-    assert 'invenio-waitforme' in app.extensions
-
-    app = Flask('testapp')
-    ext = inveniowaitforme()
-    assert 'invenio-waitforme' not in app.extensions
-    ext.init_app(app)
-    assert 'invenio-waitforme' in app.extensions
+import pytest
+from invenio_waitforme.utils import elasticsearch as wait_for_elasticsearch
+from invenio_waitforme.utils import redis as wait_for_redis
+from invenio_waitforme.utils import rabbitmq as wait_for_rabbitmq
+import testing.elasticsearch
+from subprocess import Popen
+import time
+from invenio_waitforme.utils import time_limit, TimeoutException
+from pika.exceptions import ConnectionClosed
+from mock import Mock, patch
 
 
-def test_view(app):
-    """Test view."""
-    inveniowaitforme(app)
-    with app.test_client() as client:
-        res = client.get("/")
-        assert res.status_code == 200
-        assert 'Welcome to invenio-waitforme' in str(res.data)
+@patch('psycopg2.connect')
+def test_wait_for_postgres(mock_connection):
+    mock_connection.return_value = True
+    with time_limit(3):
+        wait_for_rabbitmq()
+
+    mock_connection.return_value = ConnectionClosed()
+    with pytest.raises(TimeoutException):
+        with time_limit(3):
+            wait_for_rabbitmq()
+
+
+def test_wait_for_rabbitmq():
+    mock_connection = Mock()
+    mock_connection.return_value = True
+    with time_limit(3):
+        with patch('pika.BlockingConnection', new=mock_connection):
+            wait_for_rabbitmq()
+
+    mock_connection.return_value = ConnectionClosed()
+    with pytest.raises(TimeoutException):
+        with time_limit(3):
+            with patch('pika.BlockingConnection', new=mock_connection):
+                wait_for_rabbitmq()
+
+    mock_connection.return_value = False
+    with pytest.raises(TimeoutException):
+        with time_limit(3):
+            with patch('pika.BlockingConnection', new=mock_connection):
+                wait_for_rabbitmq()
+
+
+def test_wait_for_elasticsearch(app):
+    with testing.elasticsearch.Elasticsearch() as elasticsearch:
+        with time_limit(3):
+            wait_for_elasticsearch(elasticsearch.dsn()['hosts'], 'green')
+
+    with pytest.raises(TimeoutException):
+        with time_limit(3):
+            wait_for_elasticsearch()
+
+
+def test_wait_for_redis(app):
+    Popen(['redis-server'])
+    wait_for_redis()
+    time.sleep(3)
+    Popen(['redis-cli', 'shutdown'])
+    time.sleep(3)
+    with pytest.raises(TimeoutException):
+        with time_limit(3):
+            wait_for_redis()

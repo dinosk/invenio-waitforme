@@ -28,7 +28,7 @@ from __future__ import absolute_import, print_function
 
 import click
 
-from .utils import elasticsearch, postgres, redis, rabbitmq
+from .utils import elasticsearch, postgres, rabbitmq, redis
 
 
 @click.group('wait-for')
@@ -37,28 +37,40 @@ def wait_for():
 
 
 @wait_for.command('elasticsearch')
+@click.argument('uri', default=['http://localhost:9200/'])
+@click.argument('timeout', default=5)
 @click.argument('status', default='green')
-def elasticsearch_cmd(status):
-    elasticsearch(status)
+def elasticsearch_cmd(timeout, uri, status):
+    """Check elasticsearch status."""
+    elasticsearch(timeout, uri, status)
     click.secho('Elasticsearch is %s.' % status, fg='green')
 
 
 @wait_for.command('redis')
-@click.argument('status', default='up')
-def redis_cmd(status):
-    redis(status)
-    click.secho('redis-server is %s.' % status, fg='green')
+@click.argument('timeout', default=5)
+@click.argument('uri', default='redis://127.0.0.1:6379')
+def redis_cmd(timeout, uri):
+    """Check redis server status."""
+    redis(timeout, uri)
+    click.secho('redis-server is up.', fg='green')
 
 
 @wait_for.command('rabbitmq')
-@click.argument('status', default='up')
-def rabbitmq_cmd(status):
-    rabbitmq(status)
-    click.secho('rabbitmq-server is %s.' % status, fg='green')
+@click.argument('timeout', default=5)
+@click.argument('uri', default='localhost')
+def rabbitmq_cmd(timeout, uri):
+    """Check rabbitmq server status."""
+    rabbitmq(timeout, uri)
+    click.secho('rabbitmq-server is up.', fg='green')
 
 
 @wait_for.command('postgres')
-@click.argument('status', default='up')
-def postgres_cmd(status):
-    postgres(status)
-    click.secho('Postgres is %s.' % status, fg='green')
+@click.argument('timeout', default=5)
+@click.argument('host', default='localhost')
+@click.argument('dbname', default='invenio')
+@click.argument('dbpass', default='')
+@click.argument('user', default='postgres')
+def postgres_cmd(timeout, host, dbname, dbpass, user):
+    """Check elasticsearch status."""
+    postgres(timeout, host, dbname, dbpass, user)
+    click.secho('Postgres is up.', fg='green')

@@ -49,6 +49,10 @@ def base_app(instance_path):
     app_.config.update(
         SECRET_KEY='SECRET_KEY',
         TESTING=True,
+        REDIS_URI='127.0.0.1',
+        ELASTICSEARCH_URI='http://localhost:9200',
+        RABBITMQ_URI='127.0.0.1:5672',
+        POSTGRESQL_URI='http://localhost:5432',
     )
     Babel(app_)
     return app_
